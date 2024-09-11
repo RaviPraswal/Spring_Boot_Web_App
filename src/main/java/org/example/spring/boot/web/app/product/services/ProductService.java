@@ -1,14 +1,18 @@
 package org.example.spring.boot.web.app.product.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.spring.boot.web.app.product.records.BulkUploadForm;
 import org.example.spring.boot.web.app.product.models.Product;
 import org.example.spring.boot.web.app.product.repository.ProductRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,14 +21,22 @@ import java.util.Objects;
 @Service
 public class ProductService {
 
+    private static final Logger log = LoggerFactory.getLogger(ProductService.class);
     @Autowired
     ProductRepository productRepository;
+
+    private final ObjectMapper objectMapper;
 
     /*List<Product> products= new ArrayList(Arrays.asList(
             new Product(100,"HP Laptop",50000),
             new Product(101,"Dell Laptop",60000),
             new Product(102,"Apple Laptop",100000)
     ));*/
+
+    public ProductService(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
 
     public List<Product> getProducts(){
         return productRepository.findAll();
@@ -66,15 +78,16 @@ public class ProductService {
         return productRepository.getProductsByKeyword(keyword);
     }
 
-    public int processFile(BulkUploadForm form) {
-        Objects.requireNonNull(form);
+    public int bulkUpload(BulkUploadForm form) {
+        try {
+            var data =new String(form.getFile().getBytes());
+            Product[] productsArr = objectMapper.readValue(data, Product[].class);
+            List<Product> batch = Arrays.asList(productsArr);
+            productRepository.saveAll(batch);
 
-
-
-
-
-
-
+        } catch (Exception e) {
+            log.info(e.getMessage());
+        }
         return 1;
     }
 }

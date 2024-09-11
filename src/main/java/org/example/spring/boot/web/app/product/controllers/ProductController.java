@@ -1,15 +1,19 @@
 package org.example.spring.boot.web.app.product.controllers;
 
 import jakarta.websocket.server.PathParam;
+import org.example.spring.boot.web.app.product.exceptions.GlobalExceptionHandler;
 import org.example.spring.boot.web.app.product.records.BulkUploadForm;
 import org.example.spring.boot.web.app.product.models.Product;
 import org.example.spring.boot.web.app.product.services.ProductService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -18,8 +22,11 @@ import java.util.List;
 @RequestMapping("/api")
 @CrossOrigin(origins = "http://localhost:3000")
 public class ProductController {
+
     @Autowired
     private ProductService productService;
+
+    private static final Logger log = LoggerFactory.getLogger(ProductController.class);
 
     @GetMapping("/productss")
     public List<Product> getProducts() {
@@ -33,7 +40,6 @@ public class ProductController {
 
     @GetMapping("/products/{productId}")
     public Product getProductById(@PathVariable Long productId){
-        System.out.println("====== > "+productId);
         return productService.getProductById(productId);
     }
 
@@ -64,10 +70,13 @@ public class ProductController {
 
     @PostMapping("/upload/file")
     public ResponseEntity<String> uploadFile(@ModelAttribute BulkUploadForm form){
-        System.out.println(form);
-        int status = productService.processFile(form);
-        if(status==0) return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        else return new ResponseEntity<>(HttpStatus.OK);
+        try {
+            System.out.println(form.getFile().getBytes().length);
+            productService.bulkUpload(form);
+            return ResponseEntity.status(HttpStatus.OK).body("File Uploaded successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while uploading the file. Please try again.");
+        }
     }
 
 }
