@@ -58,14 +58,20 @@ public class ProductController {
         productService.deleteProductById(productId);
     }
 
+//    @GetMapping("/search/products")
+//    public ResponseEntity<List<Product>> getProductsByKeyword(@RequestParam String keyword){
+//        List<Product> filteredProducts= productService.getProductsByKeyword(keyword);
+//        if(filteredProducts!=null && !filteredProducts.isEmpty()){
+//            return new ResponseEntity<>(filteredProducts, HttpStatus.OK);
+//        }else{
+//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+//        }
+//    }
+
     @GetMapping("/search/products")
-    public ResponseEntity<List<Product>> getProductsByKeyword(@RequestParam String keyword){
-        List<Product> filteredProducts= productService.getProductsByKeyword(keyword);
-        if(filteredProducts!=null && !filteredProducts.isEmpty()){
-            return new ResponseEntity<>(filteredProducts, HttpStatus.OK);
-        }else{
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<Page<Product>> getProductsByKeywordAndPage(@RequestParam String keyword, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "5") int size) {
+        log.info(keyword, page, size);
+        return new ResponseEntity<>(productService.findByNameContainingOrDescriptionContaining(keyword, page, size), HttpStatus.OK);
     }
 
     @PostMapping("/upload/file")

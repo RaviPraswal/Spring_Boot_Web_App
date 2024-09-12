@@ -78,6 +78,12 @@ public class ProductService {
         return productRepository.getProductsByKeyword(keyword);
     }
 
+    public Page<Product> findByNameContainingOrDescriptionContaining(String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return productRepository.findByNameContainingOrDescriptionContaining(keyword, keyword, pageable);
+
+    }
+
     public int bulkUpload(BulkUploadForm form) {
         try {
             var data =new String(form.getFile().getBytes());
